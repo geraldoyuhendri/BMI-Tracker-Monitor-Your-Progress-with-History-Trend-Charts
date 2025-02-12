@@ -48,3 +48,60 @@ def calculate():
             category = "Overweight"
         else:
             category = "Obesity"
+        l_result_text['text'] = f"Your BMI is: {category}"
+        l_result['text'] = "{:.2f}".format(result)
+
+        current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        entry = f"Date: {current_date}, Weight: {weight} kg, Height: {height ** 0.5:.2f} m, BMI: {result:.2f}, Category: {category}"
+        bmi_history.append(entry)
+
+        with open(history_file, "a") as file:
+            file.write(entry + "\n")
+    except ValueError:
+        l_result_text['text'] = "Please enter valid inputs!"
+
+def show_history():
+    history_window = Toplevel(window)
+    history_window.title("BMI History")
+    history_window.geometry("300x300")
+    history_window.configure(bg=co1)
+
+    history_label = Label(history_window, text="BMI History", font=("Ivy 14 bold"), bg=co1, fg=co0)
+    history_label.pack(pady=10)
+
+    history_text = Text(history_window, width=35, height=15, font=("Ivy 10"), bg=co1, fg=co0, wrap=WORD)
+    history_text.pack(pady=5)
+
+    for entry in bmi_history:
+        history_text.insert(END, entry + "\n")
+
+    history_text.config(state=DISABLED)
+
+def show_chart():
+    dates = []
+    bmi_values = []
+
+    for entry in bmi_history:
+        parts = entry.split(", ")
+        try:
+            date = parts[0].split(": ")[1]
+            bmi = float(parts[3].split(": ")[1])  
+            dates.append(date)
+            bmi_values.append(bmi)
+        except (IndexError, ValueError):
+            continue
+
+    if dates and bmi_values:
+        plt.figure(figsize=(8, 5))
+        plt.plot(dates, bmi_values, marker='o', linestyle='-', color='b', label="BMI")
+        plt.axhline(18.5, color='green', linestyle='--', label="Normal Lower Bound")
+        plt.axhline(24.9, color='green', linestyle='--', label="Normal Upper Bound")
+        plt.xticks(rotation=45, ha="right")
+        plt.title("BMI History Chart")
+        plt.xlabel("Date")
+        plt.ylabel("BMI")
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+    else:
+        l_result_text['text'] = "No valid data to display in the chart!"
